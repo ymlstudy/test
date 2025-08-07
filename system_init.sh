@@ -100,7 +100,7 @@ if [ ! -d "/usr/local/maven/apache-maven-3.9.11" ]; then
   tar -xvf apache-maven-3.9.11-bin.tar.gz
   sudo mkdir -p /usr/local/maven
   sudo mv apache-maven-3.9.11 /usr/local/maven/
-  rm -f apache-maven-3.9.11-bin.tar.gz
+  rm -f apache-maven-3.9.11-bin.tar.gz /root/anaconda-ks.cfg  /root/original-ks.cfg
 fi
 echo "✅ Java 和 Maven 安装完成。"
 
