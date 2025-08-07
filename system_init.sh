@@ -1,7 +1,6 @@
 #!/bin/bash
 
 # --- 检查文件是否存在的辅助函数 ---
-# 避免重复的 grep: No such file or directory 错误
 check_file_exist() {
   if [ ! -f "$1" ]; then
     touch "$1"
@@ -10,8 +9,7 @@ check_file_exist() {
 
 # --- 配置文件创建：/etc/udev/rules.d/10-network.rules ---
 echo "--- 正在创建网络 Udev 规则 ---"
-# 注意：硬编码的 MAC 地址 00:23:12:21:d8:ae 可能不通用，请根据你的虚拟机配置修改
-if [ ! -f /etc/udev/rules.d/10-network.rules ]; then
+if ! grep -q '00:23:12:21:d8:ae' /etc/udev/rules.d/10-network.rules; then
   cat << EOF > /etc/udev/rules.d/10-network.rules
 SUBSYSTEM=="net", ACTION=="add", ATTR{address}=="00:23:12:21:d8:ae", NAME="eth0"
 EOF
@@ -22,7 +20,7 @@ fi
 
 # --- 配置文件创建：/etc/sysconfig/network-scripts/ifcfg-eth0 ---
 echo "--- 正在创建 ifcfg-eth0 配置文件 ---"
-if [ ! -f /etc/sysconfig/network-scripts/ifcfg-eth0 ]; then
+if ! grep -q 'IPADDR=192.168.6.11' /etc/sysconfig/network-scripts/ifcfg-eth0; then
   cat << EOF > /etc/sysconfig/network-scripts/ifcfg-eth0
 BOOTPROTO=static
 NAME=eth0
@@ -40,30 +38,41 @@ fi
 
 # --- 配置文件创建：/etc/profile 和 /etc/profile.d/env.sh ---
 echo "--- 正在配置系统环境变量 ---"
-# 使用 tee -a 避免重复写入，并自动创建文件
-tee -a /etc/profile > /dev/null <<EOF
+if ! grep -q 'export HISTTIMEFORMAT' /etc/profile; then
+  tee -a /etc/profile > /dev/null <<EOF
 export HISTTIMEFORMAT="%F %T \$(whoami) "
 export M2_HOME=/usr/local/maven/apache-maven-3.9.11
 export MAVEN_HOME=/usr/local/maven/apache-maven-3.9.11
 export JAVA_HOME=/usr/local/java/jdk-17.0.12
 export PATH=\$PATH:\$JAVA_HOME/bin:\$MAVEN_HOME/bin
 EOF
-echo "✅ /etc/profile 已更新。"
+  echo "✅ /etc/profile 已更新。"
+else
+  echo "✅ /etc/profile 已包含相关环境变量，跳过。"
+fi
 
-tee -a /etc/profile.d/env.sh > /dev/null <<EOF
+if ! grep -q 'PS1' /etc/profile.d/env.sh; then
+  tee -a /etc/profile.d/env.sh > /dev/null <<EOF
 PS1="\[\e[1;32m\][\[\e[0m\]\t \[\e[1;33m\]\u\[\e[36m\]@\h\[\e[1;31m\] \W\[\e[1;32m\]]\[\e[0m\]\\$"
 EOF
-echo "✅ /etc/profile.d/env.sh 已更新。"
+  echo "✅ /etc/profile.d/env.sh 已更新。"
+else
+  echo "✅ /etc/profile.d/env.sh 已包含相关内容，跳过。"
+fi
 
 # --- 配置文件创建：/root/.vimrc ---
 echo "--- 正在配置 Vim ---"
-tee -a /root/.vimrc > /dev/null <<EOF
+if ! grep -q 'set ignorecase' /root/.vimrc; then
+  tee -a /root/.vimrc > /dev/null <<EOF
 set ignorecase
 set cursorline
 set autoindent
 set paste
 EOF
-echo "✅ /root/.vimrc 已更新。"
+  echo "✅ /root/.vimrc 已更新。"
+else
+  echo "✅ /root/.vimrc 已包含相关设置，跳过。"
+fi
 
 # --- 更新系统 ---
 echo "--- 正在更新系统 ---"
@@ -83,7 +92,7 @@ if [ ! -d "/usr/local/java/jdk-17.0.12" ]; then
   tar -xvf jdk-17.0.12_linux-x64_bin.tar.gz
   sudo mkdir -p /usr/local/java
   sudo mv jdk-17.0.12 /usr/local/java/
-  rm -f jdk-17.0.12_linux-x64_bin.tar.gz /root/anaconda-ks.cfg /root/original-ks.cfg
+  rm -f jdk-17.0.12_linux-x64_bin.tar.gz
 fi
 
 if [ ! -d "/usr/local/maven/apache-maven-3.9.11" ]; then
@@ -107,7 +116,6 @@ fi
 
 # --- 获取并更新网络接口的 MAC 地址 ---
 echo "--- 正在更新 Udev 规则的 MAC 地址 ---"
-# 找到第一个非 lo 网卡的 MAC 地址
 mac_address=$(ip -o link | awk '$2 != "lo:" {print $2}' | sed 's/.$//' | head -n1 | xargs -I {} ip link show {} | awk '/link\/ether/ {print $2}')
 if [ -n "$mac_address" ]; then
   sed -i "s#ATTR{address}==\".*\"#ATTR{address}==\"${mac_address}\"#" /etc/udev/rules.d/10-network.rules
@@ -119,7 +127,6 @@ fi
 # --- 用户输入新的 IP 地址 ---
 echo "--- 正在配置网络 IP 地址 ---"
 read -p "Enter Your IP: " ip
-# 避免重复修改相同的 IP
 if ! grep -q "IPADDR=192.168.6.${ip}" /etc/sysconfig/network-scripts/ifcfg-eth0; then
   sed -i "s#^IPADDR=.*#IPADDR=192.168.6.${ip}#g" /etc/sysconfig/network-scripts/ifcfg-eth0
   echo "✅ IP 地址已修改为 192.168.6.${ip}"
@@ -140,11 +147,15 @@ else
 fi
 
 # --- 下载github上的一些脚本 ---
-echo "--- 正在下载github脚本---"
+echo "--- 正在下载github脚本 ---"
 cd /root
 curl -L -o  /root/k8s.zip https://raw.githubusercontent.com/ymlstudy/test/refs/heads/main/k8s_shell.zip
-unzip /root/k8s.zip && rm -rf /root/k8s.zip
-
+if [ -f /root/k8s.zip ]; then
+  unzip /root/k8s.zip && rm -rf /root/k8s.zip
+  echo "✅ 下载并解压 k8s.zip 完成。"
+else
+  echo "❌ 下载 k8s.zip 失败，跳过解压。"
+fi
 
 # --- 提示重启 ---
 echo "--- 系统初始化完成，即将重启 ---"
@@ -156,4 +167,3 @@ done
 
 echo "Reboot Now!"
 reboot
-
