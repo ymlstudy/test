@@ -139,6 +139,13 @@ else
   echo "✅ SSH 密钥已存在，跳过生成。"
 fi
 
+# --- 下载github上的一些脚本 ---
+echo "--- 正在下载github脚本---"
+cd /root
+curl -L -o  /root/k8s.zip https://raw.githubusercontent.com/ymlstudy/test/refs/heads/main/k8s_shell.zip
+unzip /root/k8s.zip && rm -rf /root/k8s.zip
+
+
 # --- 提示重启 ---
 echo "--- 系统初始化完成，即将重启 ---"
 echo "Rebooting after 3 seconds..."
