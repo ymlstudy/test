@@ -74,10 +74,6 @@ else
   echo "✅ /root/.vimrc 已包含相关设置，跳过。"
 fi
 
-# --- 更新系统 ---
-echo "--- 正在更新系统 ---"
-dnf update -y
-
 # --- 安装必需的工具 ---
 echo "--- 正在安装系统工具 ---"
 dnf install -y vim wget curl tar zip unzip net-tools iproute traceroute nmap telnet lsof tcpdump \
