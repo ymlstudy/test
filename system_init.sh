@@ -147,7 +147,7 @@ echo "--- 正在下载github脚本 ---"
 cd /root
 curl -L -o  /root/k8s.zip https://raw.githubusercontent.com/ymlstudy/test/refs/heads/main/k8s_shell.zip
 if [ -f /root/k8s.zip ]; then
-  unzip /root/k8s.zip && rm -rf /root/k8s.zip
+  unzip -o /root/k8s.zip && rm -rf /root/k8s.zip
   echo "✅ 下载并解压 k8s.zip 完成。"
 else
   echo "❌ 下载 k8s.zip 失败，跳过解压。"
