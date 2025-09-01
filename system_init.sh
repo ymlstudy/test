@@ -115,6 +115,8 @@ echo "--- 正在更新 Udev 规则的 MAC 地址 ---"
 mac_address=$(ip -o link | awk '$2 != "lo:" {print $2}' | sed 's/.$//' | head -n1 | xargs -I {} ip link show {} | awk '/link\/ether/ {print $2}')
 if [ -n "$mac_address" ]; then
   sed -i "s#ATTR{address}==\".*\"#ATTR{address}==\"${mac_address}\"#" /etc/udev/rules.d/10-network.rules
+  #sed -i "s#ATTR{address}==\"[^\"]*\"#ATTR{address}==\"${mac_address}\"#" /etc/udev/rules.d/10-network.rules
+
   echo "✅ MAC 地址已更新为 ${mac_address}"
 else
   echo "❌ 未找到 MAC 地址，跳过更新。"
