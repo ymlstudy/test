@@ -53,7 +53,8 @@ fi
 
 if ! grep -q 'PS1' /etc/profile.d/env.sh; then
   tee -a /etc/profile.d/env.sh > /dev/null <<EOF
-PS1="\[\e[1;32m\][\[\e[0m\]\t \[\e[1;33m\]\u\[\e[36m\]@\h\[\e[1;31m\] \W\[\e[1;32m\]]\[\e[0m\]\\$"
+#PS1="\[\e[1;32m\][\[\e[0m\]\t \[\e[1;33m\]\u\[\e[36m\]@\h\[\e[1;31m\] \W\[\e[1;32m\]]\[\e[0m\]\$"
+PS1="\[\e[1;32m\][\[\e[1;33m\]\u\[\e[36m\]@\h\[\e[1;31m\] \W\[\e[1;32m\]]\[\e[0m\]\$"
 EOF
   echo "✅ /etc/profile.d/env.sh 已更新。"
 else
