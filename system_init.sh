@@ -11,7 +11,7 @@ check_file_exist() {
 echo "--- 正在创建网络 Udev 规则 ---"
 if ! grep -q '00:23:12:21:d8:ae' /etc/udev/rules.d/10-network.rules; then
   cat << EOF > /etc/udev/rules.d/10-network.rules
-SUBSYSTEM=="net", ACTION=="add", ATTR{address}=="00:23:12:21:d8:ae", NAME="eth0"
+SUBSYSTEM=="net",ACTION=="add",ATTR{address}=="00:23:12:21:d8:ae",NAME="eth0"
 EOF
   echo "✅ 规则文件 /etc/udev/rules.d/10-network.rules 创建成功。"
 else
