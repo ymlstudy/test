@@ -41,8 +41,8 @@ echo "--- 正在配置系统环境变量 ---"
 if ! grep -q 'export HISTTIMEFORMAT' /etc/profile; then
   tee -a /etc/profile > /dev/null <<EOF
 export HISTTIMEFORMAT="%F %T \$(whoami) "
-export M2_HOME=/usr/local/maven/apache-maven-3.9.11
-export MAVEN_HOME=/usr/local/maven/apache-maven-3.9.11
+export M2_HOME=/usr/local/maven/apache-maven-3.9.12
+export MAVEN_HOME=/usr/local/maven/apache-maven-3.9.12
 export JAVA_HOME=/usr/local/java/jdk-17.0.12
 export PATH=\$PATH:\$JAVA_HOME/bin:\$MAVEN_HOME/bin
 EOF
