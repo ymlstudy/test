@@ -92,12 +92,12 @@ if [ ! -d "/usr/local/java/jdk-17.0.12" ]; then
   rm -f jdk-17.0.12_linux-x64_bin.tar.gz
 fi
 
-if [ ! -d "/usr/local/maven/apache-maven-3.9.11" ]; then
-  wget https://dlcdn.apache.org/maven/maven-3/3.9.11/binaries/apache-maven-3.9.11-bin.tar.gz
-  tar -xvf apache-maven-3.9.11-bin.tar.gz
+if [ ! -d "/usr/local/maven/apache-maven-3.9.12" ]; then
+  wget https://dlcdn.apache.org/maven/maven-3/3.9.12/binaries/apache-maven-3.9.12-bin.tar.gz
+  tar -xvf apache-maven-3.9.12-bin.tar.gz
   sudo mkdir -p /usr/local/maven
-  sudo mv apache-maven-3.9.11 /usr/local/maven/
-  rm -f apache-maven-3.9.11-bin.tar.gz /root/anaconda-ks.cfg  /root/original-ks.cfg
+  sudo mv apache-maven-3.9.12 /usr/local/maven/
+  rm -f apache-maven-3.9.12-bin.tar.gz /root/anaconda-ks.cfg  /root/original-ks.cfg
 fi
 echo "✅ Java 和 Maven 安装完成。"
 
