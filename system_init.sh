@@ -113,12 +113,24 @@ fi
 
 # --- 获取并更新网络接口的 MAC 地址 ---
 echo "--- 正在更新 Udev 规则的 MAC 地址 ---"
-mac_address=$(ip -o link | awk '$2 != "lo:" {print $2}' | sed 's/.$//' | head -n1 | xargs -I {} ip link show {} | awk '/link\/ether/ {print $2}')
-if [ -n "$mac_address" ]; then
-  sed -i "s#ATTR{address}==\".*\"#ATTR{address}==\"${mac_address}\"#" /etc/udev/rules.d/10-network.rules
-  #sed -i "s#ATTR{address}==\"[^\"]*\"#ATTR{address}==\"${mac_address}\"#" /etc/udev/rules.d/10-network.rules
+dev=""
+for d in ens160 eth0 enp0s3; do
+if [ -e "/sys/class/net/$d/address" ]; then
+    dev="$d"
+    break
+fi
+done
 
-  echo "✅ MAC 地址已更新为 ${mac_address}"
+mac_address=""
+if [ -n "$dev" ]; then
+  mac_address=$(cat "/sys/class/net/$dev/address")
+fi
+
+if [ -n "$mac_address" ]; then
+  cat > /etc/udev/rules.d/10-network.rules <<EOF
+SUBSYSTEM=="net",ACTION=="add",ATTR{address}=="${mac_address}",NAME="eth0"
+EOF
+  echo "✅ MAC 地址已更新为 ${mac_address} (device=${dev})"
 else
   echo "❌ 未找到 MAC 地址，跳过更新。"
 fi
