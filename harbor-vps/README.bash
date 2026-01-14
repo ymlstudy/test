@@ -9,7 +9,7 @@ Kubernetes 拉取镜像：Kubernetes 配置 imagePullSecrets，从 Harbor 中拉
 
 2，详细步骤：
 一、准备环境：
-1个国外的VPS，必须是国外的，配置在2h2g4M50GI，系统用rocky9版本。长期用的话，推荐磁盘大小在100G。
+1个国外的VPS，必须是国外的，配置:2h2g4M50GI，系统用rocky9版本。长期用的话，推荐磁盘大小在100G。
 
 结构如下
 VPS
@@ -44,7 +44,8 @@ https:
   private_key: /etc/harbor/ssl/harbor.key  # 你的私钥路径
 
 
-安装 Harbor：./install.sh
+安装 Harbor：
+./install.sh
 
 
 配置ssl证书：
@@ -108,6 +109,8 @@ Kyverno 用于在 K8s 中自动修改镜像地址，将镜像从公共镜像仓�
 kubectl create -f https://raw.githubusercontent.com/kyverno/kyverno/main/docs/installation/kyverno.yaml
 
 创建一个 Kyverno 策略来重写所有 Pod 中的镜像地址
+harbor-vps/rewrite-image-all.yaml
+kubectl apply -f harbor-vps/rewrite-image-all.yaml
 
 这样每当 Pod 被创建时，Kyverno 会自动重写镜像地址。
 
