@@ -67,13 +67,10 @@ docker-compose up -d
 三、Harbor 配置代理缓存
 
 在 Harbor 中创建 Proxy Cache 项目，创建 Proxy Cache 类型的项目，按需命名：
-[![Image Example](images/your-image.png)](https://raw.githubusercontent.com/ymlstudy/test/refs/heads/main/harbor-vps/h1.png)
-
 
 https://raw.githubusercontent.com/ymlstudy/test/refs/heads/main/harbor-vps/h1.png
 
 在 Harbor 中创建上面的这几个名字的项目，打开镜像代理，一一对应。
-![External Image]([https://example.com/image.jpg](https://raw.githubusercontent.com/ymlstudy/test/refs/heads/main/harbor-vps/h2.png))
 
 https://raw.githubusercontent.com/ymlstudy/test/refs/heads/main/harbor-vps/h2.png
 
