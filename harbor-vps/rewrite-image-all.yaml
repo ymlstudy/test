@@ -1,0 +1,264 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: rewrite-image-to-harbor-all
+spec:
+  background: false
+  validationFailureAction: Enforce
+  rules:
+
+  # A) ghcr.io -> k8sk8s.top/ghcr/
+  - name: rewrite-ghcr
+    match:
+      any:
+      - resources: { kinds: ["Pod"] }
+    mutate:
+      foreach:
+      - list: "request.object.spec.containers"
+        preconditions:
+          all:
+          - { key: "{{ element.image }}", operator: NotEquals, value: "" }
+          - { key: "{{ regex_match('^k8sk8s\\.top/.*', element.image) }}", operator: Equals, value: false }
+          - { key: "{{ regex_match('^ghcr\\.io/.*', element.image) }}", operator: Equals, value: true }
+        patchStrategicMerge:
+          spec:
+            containers:
+            - name: "{{ element.name }}"
+              image: "{{ regex_replace_all('^ghcr\\.io/(.*)$', element.image, 'k8sk8s.top/ghcr/${1}') }}"
+      - list: "request.object.spec.initContainers || `[]`"
+        preconditions:
+          all:
+          - { key: "{{ element.image }}", operator: NotEquals, value: "" }
+          - { key: "{{ regex_match('^k8sk8s\\.top/.*', element.image) }}", operator: Equals, value: false }
+          - { key: "{{ regex_match('^ghcr\\.io/.*', element.image) }}", operator: Equals, value: true }
+        patchStrategicMerge:
+          spec:
+            initContainers:
+            - name: "{{ element.name }}"
+              image: "{{ regex_replace_all('^ghcr\\.io/(.*)$', element.image, 'k8sk8s.top/ghcr/${1}') }}"
+
+  # B) quay.io -> k8sk8s.top/quay/
+  - name: rewrite-quay
+    match:
+      any:
+      - resources: { kinds: ["Pod"] }
+    mutate:
+      foreach:
+      - list: "request.object.spec.containers"
+        preconditions:
+          all:
+          - { key: "{{ element.image }}", operator: NotEquals, value: "" }
+          - { key: "{{ regex_match('^k8sk8s\\.top/.*', element.image) }}", operator: Equals, value: false }
+          - { key: "{{ regex_match('^quay\\.io/.*', element.image) }}", operator: Equals, value: true }
+        patchStrategicMerge:
+          spec:
+            containers:
+            - name: "{{ element.name }}"
+              image: "{{ regex_replace_all('^quay\\.io/(.*)$', element.image, 'k8sk8s.top/quay/${1}') }}"
+      - list: "request.object.spec.initContainers || `[]`"
+        preconditions:
+          all:
+          - { key: "{{ element.image }}", operator: NotEquals, value: "" }
+          - { key: "{{ regex_match('^k8sk8s\\.top/.*', element.image) }}", operator: Equals, value: false }
+          - { key: "{{ regex_match('^quay\\.io/.*', element.image) }}", operator: Equals, value: true }
+        patchStrategicMerge:
+          spec:
+            initContainers:
+            - name: "{{ element.name }}"
+              image: "{{ regex_replace_all('^quay\\.io/(.*)$', element.image, 'k8sk8s.top/quay/${1}') }}"
+
+  # C) registry.k8s.io / k8s.gcr.io -> k8sk8s.top/k8s/
+  - name: rewrite-k8s
+    match:
+      any:
+      - resources: { kinds: ["Pod"] }
+    mutate:
+      foreach:
+      - list: "request.object.spec.containers"
+        preconditions:
+          all:
+          - { key: "{{ element.image }}", operator: NotEquals, value: "" }
+          - { key: "{{ regex_match('^k8sk8s\\.top/.*', element.image) }}", operator: Equals, value: false }
+          - key: "{{ regex_match('^(registry\\.k8s\\.io|k8s\\.gcr\\.io)/.*', element.image) }}"
+            operator: Equals
+            value: true
+        patchStrategicMerge:
+          spec:
+            containers:
+            - name: "{{ element.name }}"
+              image: "{{ regex_replace_all('^(registry\\.k8s\\.io|k8s\\.gcr\\.io)/(.*)$', element.image, 'k8sk8s.top/k8s/${2}') }}"
+      - list: "request.object.spec.initContainers || `[]`"
+        preconditions:
+          all:
+          - { key: "{{ element.image }}", operator: NotEquals, value: "" }
+          - { key: "{{ regex_match('^k8sk8s\\.top/.*', element.image) }}", operator: Equals, value: false }
+          - key: "{{ regex_match('^(registry\\.k8s\\.io|k8s\\.gcr\\.io)/.*', element.image) }}"
+            operator: Equals
+            value: true
+        patchStrategicMerge:
+          spec:
+            initContainers:
+            - name: "{{ element.name }}"
+              image: "{{ regex_replace_all('^(registry\\.k8s\\.io|k8s\\.gcr\\.io)/(.*)$', element.image, 'k8sk8s.top/k8s/${2}') }}"
+
+  # D) gcr.io -> k8sk8s.top/gcr/
+  - name: rewrite-gcr
+    match:
+      any:
+      - resources: { kinds: ["Pod"] }
+    mutate:
+      foreach:
+      - list: "request.object.spec.containers"
+        preconditions:
+          all:
+          - { key: "{{ element.image }}", operator: NotEquals, value: "" }
+          - { key: "{{ regex_match('^k8sk8s\\.top/.*', element.image) }}", operator: Equals, value: false }
+          - { key: "{{ regex_match('^gcr\\.io/.*', element.image) }}", operator: Equals, value: true }
+        patchStrategicMerge:
+          spec:
+            containers:
+            - name: "{{ element.name }}"
+              image: "{{ regex_replace_all('^gcr\\.io/(.*)$', element.image, 'k8sk8s.top/gcr/${1}') }}"
+      - list: "request.object.spec.initContainers || `[]`"
+        preconditions:
+          all:
+          - { key: "{{ element.image }}", operator: NotEquals, value: "" }
+          - { key: "{{ regex_match('^k8sk8s\\.top/.*', element.image) }}", operator: Equals, value: false }
+          - { key: "{{ regex_match('^gcr\\.io/.*', element.image) }}", operator: Equals, value: true }
+        patchStrategicMerge:
+          spec:
+            initContainers:
+            - name: "{{ element.name }}"
+              image: "{{ regex_replace_all('^gcr\\.io/(.*)$', element.image, 'k8sk8s.top/gcr/${1}') }}"
+
+
+  # F) docker.elastic.co -> k8sk8s.top/elastic/
+  - name: rewrite-elastic
+    match:
+      any:
+      - resources: { kinds: ["Pod"] }
+    mutate:
+      foreach:
+      - list: "request.object.spec.containers"
+        preconditions:
+          all:
+          - { key: "{{ element.image }}", operator: NotEquals, value: "" }
+          - { key: "{{ regex_match('^k8sk8s\\.top/.*', element.image) }}", operator: Equals, value: false }
+          - { key: "{{ regex_match('^docker\\.elastic\\.co/.*', element.image) }}", operator: Equals, value: true }
+        patchStrategicMerge:
+          spec:
+            containers:
+            - name: "{{ element.name }}"
+              image: "{{ regex_replace_all('^docker\\.elastic\\.co/(.*)$', element.image, 'k8sk8s.top/elastic/${1}') }}"
+      - list: "request.object.spec.initContainers || `[]`"
+        preconditions:
+          all:
+          - { key: "{{ element.image }}", operator: NotEquals, value: "" }
+          - { key: "{{ regex_match('^k8sk8s\\.top/.*', element.image) }}", operator: Equals, value: false }
+          - { key: "{{ regex_match('^docker\\.elastic\\.co/.*', element.image) }}", operator: Equals, value: true }
+        patchStrategicMerge:
+          spec:
+            initContainers:
+            - name: "{{ element.name }}"
+              image: "{{ regex_replace_all('^docker\\.elastic\\.co/(.*)$', element.image, 'k8sk8s.top/elastic/${1}') }}"
+
+
+  # H) docker.io / index.docker.io -> k8sk8s.top/dockerhub/
+  - name: rewrite-dockerhub-explicit
+    match:
+      any:
+      - resources: { kinds: ["Pod"] }
+    mutate:
+      foreach:
+      - list: "request.object.spec.containers"
+        preconditions:
+          all:
+          - { key: "{{ element.image }}", operator: NotEquals, value: "" }
+          - { key: "{{ regex_match('^k8sk8s\\.top/.*', element.image) }}", operator: Equals, value: false }
+          - key: "{{ regex_match('^(docker\\.io|index\\.docker\\.io)/.*', element.image) }}"
+            operator: Equals
+            value: true
+        patchStrategicMerge:
+          spec:
+            containers:
+            - name: "{{ element.name }}"
+              image: "{{ regex_replace_all('^(docker\\.io|index\\.docker\\.io)/(.*)$', element.image, 'k8sk8s.top/dockerhub/${2}') }}"
+      - list: "request.object.spec.initContainers || `[]`"
+        preconditions:
+          all:
+          - { key: "{{ element.image }}", operator: NotEquals, value: "" }
+          - { key: "{{ regex_match('^k8sk8s\\.top/.*', element.image) }}", operator: Equals, value: false }
+          - key: "{{ regex_match('^(docker\\.io|index\\.docker\\.io)/.*', element.image) }}"
+            operator: Equals
+            value: true
+        patchStrategicMerge:
+          spec:
+            initContainers:
+            - name: "{{ element.name }}"
+              image: "{{ regex_replace_all('^(docker\\.io|index\\.docker\\.io)/(.*)$', element.image, 'k8sk8s.top/dockerhub/${2}') }}"
+
+  # I) 无域名但有 slash 的（library/nginx:1.25、bitnami/nginx:...） -> dockerhub
+  #    排除：带点的域名（ghcr.io/..、quay.io/..、registry.k8s.io/..）以及 host:port/..
+  - name: rewrite-dockerhub-implicit
+    match:
+      any:
+      - resources: { kinds: ["Pod"] }
+    mutate:
+      foreach:
+      - list: "request.object.spec.containers"
+        preconditions:
+          all:
+          - { key: "{{ element.image }}", operator: NotEquals, value: "" }
+          - { key: "{{ regex_match('^k8sk8s\\.top/.*', element.image) }}", operator: Equals, value: false }
+          - { key: "{{ regex_match('^[^/]+/.*', element.image) }}", operator: Equals, value: true }
+          - { key: "{{ regex_match('^[^/]+\\.[^/]+/.*', element.image) }}", operator: Equals, value: false }
+          - { key: "{{ regex_match('^[^/]+:[0-9]+/.*', element.image) }}", operator: Equals, value: false }
+        patchStrategicMerge:
+          spec:
+            containers:
+            - name: "{{ element.name }}"
+              image: "k8sk8s.top/dockerhub/{{ element.image }}"
+      - list: "request.object.spec.initContainers || `[]`"
+        preconditions:
+          all:
+          - { key: "{{ element.image }}", operator: NotEquals, value: "" }
+          - { key: "{{ regex_match('^k8sk8s\\.top/.*', element.image) }}", operator: Equals, value: false }
+          - { key: "{{ regex_match('^[^/]+/.*', element.image) }}", operator: Equals, value: true }
+          - { key: "{{ regex_match('^[^/]+\\.[^/]+/.*', element.image) }}", operator: Equals, value: false }
+          - { key: "{{ regex_match('^[^/]+:[0-9]+/.*', element.image) }}", operator: Equals, value: false }
+        patchStrategicMerge:
+          spec:
+            initContainers:
+            - name: "{{ element.name }}"
+              image: "k8sk8s.top/dockerhub/{{ element.image }}"
+
+  # J) 纯短名（nginx:1.25 / busybox）-> dockerhub/library
+  - name: rewrite-shortname-to-dockerhub-library
+    match:
+      any:
+      - resources: { kinds: ["Pod"] }
+    mutate:
+      foreach:
+      - list: "request.object.spec.containers"
+        preconditions:
+          all:
+          - { key: "{{ element.image }}", operator: NotEquals, value: "" }
+          - { key: "{{ regex_match('^k8sk8s\\.top/.*', element.image) }}", operator: Equals, value: false }
+          - { key: "{{ regex_match('^[^/]+$', element.image) }}", operator: Equals, value: true }
+        patchStrategicMerge:
+          spec:
+            containers:
+            - name: "{{ element.name }}"
+              image: "k8sk8s.top/dockerhub/library/{{ element.image }}"
+      - list: "request.object.spec.initContainers || `[]`"
+        preconditions:
+          all:
+          - { key: "{{ element.image }}", operator: NotEquals, value: "" }
+          - { key: "{{ regex_match('^k8sk8s\\.top/.*', element.image) }}", operator: Equals, value: false }
+          - { key: "{{ regex_match('^[^/]+$', element.image) }}", operator: Equals, value: true }
+        patchStrategicMerge:
+          spec:
+            initContainers:
+            - name: "{{ element.name }}"
+              image: "k8sk8s.top/dockerhub/library/{{ element.image }}"
+
