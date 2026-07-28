@@ -4,7 +4,7 @@ services:
 
   zookeeper-server:
     container_name: zookeeper-container
-    image: registry.cn-hangzhou.aliyuncs.com/zhangshijie/zookeeper:v3.7.0
+    image: docker.io/ccxylt/prometheus:zookeeper-v3.7.0 
     restart: always
 
     ports:
@@ -21,7 +21,7 @@ services:
 
   kafka-server:
     container_name: kafka-container
-    image: registry.cn-hangzhou.aliyuncs.com/zhangshijie/kafka:2.13-2.8.1
+    image: docker.io/ccxylt/prometheus:kafka-2.13-2.8.1 
 
     restart: always
 
@@ -52,7 +52,7 @@ services:
 
   kafka-manager:
     container_name: kafka-manager-container
-    image: registry.cn-hangzhou.aliyuncs.com/zhangshijie/kafka-manager:latest
+    image: docker.io/ccxylt/prometheus:kafka-manager-latest 
 
     restart: always
 
@@ -73,7 +73,7 @@ services:
 
   kafka-exporter:
     container_name: kafka-exporter-container
-    image: registry.cn-hangzhou.aliyuncs.com/zhangshijie/kafka-exporter:v1.7.0
+    image: docker.io/ccxylt/prometheus:kafka-exporter-v1.7.0
 
     restart: always
 
