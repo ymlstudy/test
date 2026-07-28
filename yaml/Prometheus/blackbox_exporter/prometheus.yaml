@@ -1,0 +1,333 @@
+# my global config
+global:
+  scrape_interval: 15s # Set the scrape interval to every 15 seconds. Default is every 1 minute.
+  evaluation_interval: 15s # Evaluate rules every 15 seconds. The default is every 1 minute.
+  # scrape_timeout is set to the global default (10s).
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          # - alertmanager:9093
+
+# Load rules once and periodically evaluate them according to the global 'evaluation_interval'.
+rule_files:
+  # - "first_rules.yml"
+  # - "second_rules.yml"
+
+# A scrape configuration containing exactly one endpoint to scrape:
+# Here it's Prometheus itself.
+scrape_configs:
+  # The job name is added as a label `job=<job_name>` to any timeseries scraped from this config.
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]
+        labels:
+          app: "prometheus"
+
+  - job_name: "file_sd_my_server"
+    file_sd_configs:
+      - files:
+        - /apps/prometheus/file_sd/sd_my_server.yaml
+        refresh_interval: 10s
+  - job_name: "dns_server_name_monitor"
+    metrics_path: /metrics
+    dns_sd_configs:
+    - names:
+      - node1.com.lab.local
+      - node2.com.lab.local
+      - node3.com.lab.local
+      type: A
+      port: 9100    
+#API Serevr节点发现
+  - job_name: 'kubernetes-apiservers-monitor' 
+    kubernetes_sd_configs: 
+    - role: endpoints
+      api_server: https://h11:6443
+      tls_config: 
+        insecure_skip_verify: true  
+      bearer_token_file: /apps/prometheus/k8s.token 
+    scheme: https 
+    tls_config: 
+      insecure_skip_verify: true 
+    bearer_token_file: /apps/prometheus/k8s.token 
+    relabel_configs: 
+    - source_labels: [__meta_kubernetes_namespace, __meta_kubernetes_service_name, __meta_kubernetes_endpoint_port_name] 
+      action: keep 
+      regex: default;kubernetes;https 
+#node节点发现
+  - job_name: 'kubernetes-nodes-monitor' 
+    scheme: http 
+    tls_config: 
+      insecure_skip_verify: true 
+    bearer_token_file: /apps/prometheus/k8s.token 
+    kubernetes_sd_configs: 
+    - role: node 
+      api_server: https://h11:6443 
+      tls_config: 
+        insecure_skip_verify: true 
+      bearer_token_file: /apps/prometheus/k8s.token 
+    relabel_configs: 
+      - source_labels: [__address__] 
+        regex: '(.*):10250' 
+        replacement: '${1}:9100' 
+        target_label: __address__ 
+        action: replace 
+      - source_labels: [__meta_kubernetes_node_label_failure_domain_beta_kubernetes_io_region] 
+        regex: '(.*)' 
+        replacement: '${1}' 
+        action: replace 
+        target_label: LOC 
+      - source_labels: [__meta_kubernetes_node_label_failure_domain_beta_kubernetes_io_region] 
+        regex: '(.*)' 
+        replacement: 'NODE' 
+        action: replace 
+        target_label: Type 
+      - source_labels: [__meta_kubernetes_node_label_failure_domain_beta_kubernetes_io_region] 
+        regex: '(.*)' 
+        replacement: 'K8S-test' 
+        action: replace 
+        target_label: Env 
+      - action: labelmap 
+        regex: __meta_kubernetes_node_label_(.+) 
+
+#指定namespace 的pod
+  - job_name: 'kubernetes-发现指定namespace的所有pod'
+    kubernetes_sd_configs:
+    - role: pod
+      api_server: https://h11:6443
+      tls_config:
+        insecure_skip_verify: true
+      bearer_token_file: /apps/prometheus/k8s.token
+      namespaces:
+        names:
+        - myserver
+        - mypod
+    relabel_configs:
+    - action: labelmap
+      regex: __meta_kubernetes_pod_label_(.+)
+    - source_labels: [__meta_kubernetes_namespace]
+      action: replace
+      target_label: kubernetes_namespace
+    - source_labels: [__meta_kubernetes_pod_name]
+      action: replace
+      target_label: kubernetes_pod_name
+
+#指定Pod发现条件
+  - job_name: 'kubernetes-指定发现条件的pod' 
+    kubernetes_sd_configs: 
+    - role: pod 
+      api_server: https://h11:6443 
+      tls_config: 
+        insecure_skip_verify: true 
+      bearer_token_file: /apps/prometheus/k8s.token 
+    relabel_configs: 
+    - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape] 
+      action: keep 
+      regex: true 
+    - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path] 
+      action: replace 
+      target_label: __metrics_path__ 
+      regex: (.+) 
+    - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port] 
+      action: replace 
+      regex: ([^:]+)(?::\d+)?;(\d+) 
+      replacement: $1:$2 
+      target_label: __address__ 
+    - action: labelmap 
+      regex: __meta_kubernetes_pod_label_(.+) 
+    - source_labels: [__meta_kubernetes_namespace] 
+      action: replace 
+      target_label: kubernetes_namespace 
+    - source_labels: [__meta_kubernetes_pod_name] 
+      action: replace 
+      target_label: kubernetes_pod_name 
+    - source_labels: [__meta_kubernetes_pod_label_pod_template_hash] 
+      regex: '(.*)' 
+      replacement: 'K8S-test' 
+      action: replace 
+      target_label: Env
+
+
+  - job_name: consul
+    honor_labels: true
+    metrics_path: /metrics
+    scheme: http
+    consul_sd_configs:
+      - server: h16:8500
+        services: []
+      - server: h17:8500
+        services: []
+      - server: h18:8500
+        services: []
+
+    relabel_configs:
+      - source_labels: [__meta_consul_tags]
+        target_label: product
+      - source_labels: [__meta_consul_dc]
+        target_label: idc
+      - source_labels: [__meta_consul_service]
+        regex: "consul"
+        action: drop
+
+
+  - job_name: "kube-state-metrics"
+    static_configs: 
+      - targets: ["h12:31666"]
+
+  - job_name: "java-app"
+    static_configs:
+      - targets: ["h16:9400"]
+
+  - job_name: "mysql-monitor-h16"
+    static_configs:
+      - targets: ["h16:9104"]
+
+  - job_name: "haproxy-h16"
+    static_configs:
+      - targets: ["h16:9101"]
+
+  - job_name: "k8s-nginx"
+    static_configs:
+      - targets: ["h14:31913"]
+
+  - job_name: "nginx-metrics"
+    static_configs:
+      - targets: ["h18:9913"]
+
+  - job_name: "kafka-monitor"
+    static_configs:
+      - targets: ["h12:9308"]
+  
+  # 网站状态指标采集
+  - job_name: 'http_status'
+    metrics_path: /probe
+    params:
+      module:
+        - http_2xx
+
+    static_configs:
+      - targets:
+          - http://www.xiaomi.com
+          - http://www.jd.com
+        labels:
+          instance: http_status
+          group: web
+
+    relabel_configs:
+
+    # 1. 将目标URL传递给blackbox exporter的target参数
+      - source_labels: [__address__]
+        target_label: __param_target
+
+    # 2. 保留原始URL，方便Grafana展示
+      - source_labels: [__address__]
+        target_label: url
+
+    # 3. 修改Prometheus实际请求地址
+    # 原本：
+    # __address__ = http://www.xiaomi.com
+    #
+    # 修改为：
+    # __address__ = blackbox exporter地址
+
+      - target_label: __address__
+        replacement: h16:9115
+
+  # ICMP Ping 指标采集
+  - job_name: 'ping_status'
+    metrics_path: /probe
+  
+    # blackbox exporter 使用 ICMP 模块
+    params:
+      module:
+        - icmp
+  
+    static_configs:
+      - targets:
+          - 192.168.6.1
+          - 223.6.6.6
+        labels:
+          instance: ping_status
+          group: icmp
+  
+    relabel_configs:
+  
+      # 将目标IP传递给blackbox exporter的target参数
+      - source_labels: [__address__]
+        target_label: __param_target
+  
+      # 添加ip标签，方便Grafana展示
+      - source_labels: [__address__]
+        target_label: ip
+  
+      # 修改Prometheus实际请求地址为blackbox exporter
+      - target_label: __address__
+        replacement: h16:9115
+
+  # TCP端口监控
+  - job_name: 'tcp_status'
+  
+    metrics_path: /probe
+  
+    params:
+      module:
+        - tcp_connect
+  
+  
+    static_configs:
+      - targets:
+          - 192.168.6.16:8080
+          - 192.168.6.17:90
+          - 192.168.6.11:6443
+  
+        labels:
+          group: tcp
+          instance: tcp_status
+  
+  
+    relabel_configs:
+  
+      # 传递目标地址
+      - source_labels: [__address__]
+        target_label: __param_target
+  
+  
+      # 保存目标
+      - source_labels: [__address__]
+        target_label: endpoint
+  
+  
+      # 修改访问blackbox地址
+      - target_label: __address__
+        replacement: h16:9115
+
+  # SSL证书监控
+  - job_name: 'ssl_expire'
+    metrics_path: /probe
+    params:
+      module:
+        - https_cert
+  
+    static_configs:
+      - targets:
+          - https://www.baidu.com
+          - https://www.jd.com
+  
+        labels:
+          group: ssl
+          instance: ssl_check
+  
+    relabel_configs:
+      # 传递URL
+      - source_labels: [__address__]
+        target_label: __param_target
+  
+      # 保存域名
+      - source_labels: [__address__]
+        target_label: domain
+  
+      # blackbox地址
+      - target_label: __address__
+        replacement: h16:9115
