@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mysql-exporter-configmap
+  namespace: mysql
+  labels:
+    app: mysql-exporter-configmap
+data:
+  mysql-exporter-map: |
+    [client]
+    user=mysql_exporter
+    password=imnot007*
