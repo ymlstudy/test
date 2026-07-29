@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis-deployment
+  namespace: redis 
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+      annotations:
+        prometheus.io/scrape: 'true'
+        prometheus.io/port: "9121"
+    spec:
+      containers:
+      - name: redis
+        image: redis:4.0.14 
+        command: ["/usr/local/bin/docker-entrypoint.sh"]
+        args: ["--requirepass","123456"]
+        resources:
+          requests:
+            cpu: 200m
+            memory: 156Mi
+        ports:
+        - containerPort: 6379
+      - name: redis-exporter
+        image: oliver006/redis_exporter:latest
+        command: ["/redis_exporter"]
+        args: 
+          - "-redis.addr=redis://localhost:6379"
+          - "-redis.password=123456"
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+        ports:
+        - containerPort: 9121

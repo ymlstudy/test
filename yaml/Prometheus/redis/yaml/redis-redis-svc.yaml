@@ -1,0 +1,16 @@
+kind: Service  #service 类型
+apiVersion: v1
+metadata:
+#  annotations:
+#    prometheus.io/scrape: 'false'
+  name: redis-redis-service
+  namespace: redis 
+spec:
+  type: NodePort
+  ports:
+    - port: 6379
+      targetPort: 6379
+      nodePort: 30379
+      protocol: TCP
+  selector:
+    app: redis

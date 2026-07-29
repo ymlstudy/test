@@ -1,0 +1,17 @@
+kind: Service  #service 类型
+apiVersion: v1
+metadata:
+  annotations:
+    prometheus.io/scrape: 'true'
+    prometheus.io/port: "9121"
+  name: redis-exporter-service
+  namespace: redis 
+spec:
+  type: NodePort
+  ports:
+    - port: 9121
+      targetPort: 9121
+      nodePort: 39121
+      protocol: TCP
+  selector:
+    app: redis
