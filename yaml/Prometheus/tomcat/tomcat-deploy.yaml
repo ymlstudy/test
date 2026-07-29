@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tomcat-deployment
+  namespace: default
+spec:
+  selector: 
+    matchLabels: 
+     app: tomcat
+  replicas: 1 # tells deployment to run 2 pods matching the template
+  template: # create pods using pod definition in this template
+    metadata:
+      labels:
+        app: tomcat
+      annotations:
+        prometheus.io/scrape: 'true'
+        prometheus.io/port: "8080"
+    spec:
+      containers:
+      - name: tomcat
+        image:docker.io/ccxylt/prometheus:tomcat-app1-v1 
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+        securityContext: 
+          privileged: true
