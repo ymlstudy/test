@@ -1,0 +1,13 @@
+[Unit]
+Description=Prometheus alertmanager After=network.target
+[Service]
+ExecStart=/apps/alertmanager/alertmanager \
+--config.file=/apps/alertmanager/alertmanager.yml \
+--cluster.listen-address=0.0.0.0:9094 \
+--cluster.peer=h16:9094
+
+
+
+
+[Install]
+WantedBy=multi-user.target
