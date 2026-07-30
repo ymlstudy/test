@@ -1,0 +1,59 @@
+groups:
+    - name: Blackbox 监控告警
+      rules:
+      - alert: Blackbox指标抓取慢
+        expr: avg_over_time(probe_duration_seconds[1m]) > 1
+        for: 30m
+        labels:
+          severity: warning
+        annotations:
+          summary: telnet (instance {{ $labels.instance }}) 超过1秒
+          description: "VALUE = {{ $value }}n  LABELS = {{ $labels }}"
+      - alert: Blackbox指标获取失败
+        expr: probe_http_status_code <= 199 OR probe_http_status_code >= 400
+        for: 30m
+        labels:
+          severity: critical
+        annotations:
+          summary: HTTP 状态码 (instance {{ $labels.instance }})
+          description: "HTTP status code is not 200-399n  VALUE = {{ $value }}n  LABELS = {{ $labels }}"
+      - alert: SSL 证书有效期不足30天
+        expr: probe_ssl_earliest_cert_expiry - time() < 86400 * 30 #证书到期时间
+        for: 30m
+        labels:
+          severity: warning
+        annotations:
+          summary:  域名证书即将过期 (instance {{ $labels.instance }})
+          description: "域名证书30天后过期n  VALUE = {{ $value }}n  LABELS = {{ $labels }}"
+      - alert: SSL 证书有效期不足7天
+        expr: probe_ssl_earliest_cert_expiry - time() < 86400 * 7
+        for: 30m
+        labels:
+          severity: critical
+        annotations:
+          summary: 域名证书即将过期 (instance {{ $labels.instance }})
+          description: "域名证书7天后过期n VALUE = {{ $value }}n  LABELS = {{ $labels }}"
+      - alert: SSL 证书有效期不足3天
+        expr: probe_ssl_earliest_cert_expiry - time() < 86400 * 3
+        for: 30m
+        labels:
+          severity: critical
+        annotations:
+          summary: 域名证书即将过期 (instance {{ $labels.instance }})
+          description: "域名证书3天后过期n VALUE = {{ $value }}n  LABELS = {{ $labels }}"
+      - alert:  SSL 证书已过期
+        expr: probe_ssl_earliest_cert_expiry - time() <= 0
+        for: 30m
+        labels:
+          severity: critical
+        annotations:
+          summary: 域名证书已过期 (instance {{ $labels.instance }})
+          description: "域名证书已过期n  VALUE = {{ $value }}n  LABELS = {{ $labels }}"
+      - alert: Blackbox指标抓取超过10秒钟
+        expr: avg_over_time(probe_http_duration_seconds[1m]) > 10
+        for: 30m
+        labels:
+          severity: warning
+        annotations:
+          summary: HTTP请求超时 (instance {{ $labels.instance }})
+          description: "HTTP请求超时超过10秒n  VALUE = {{ $value }}n  LABELS = {{ $labels }}"

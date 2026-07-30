@@ -1,0 +1,57 @@
+global:
+  resolve_timeout: 5m
+
+  smtp_smarthost: 'smtp.qq.com:465'
+  smtp_from: ''
+  smtp_auth_username: ''
+  smtp_auth_password: ''
+  smtp_hello: 'qq.com'
+  smtp_require_tls: false
+
+templates:
+  - '/apps/alertmanager/message_template.templ'
+#通过 route 定义告警分组和发送策略
+route:
+  # 使用 alertname 分组
+  group_by:
+    - alertname
+
+  # 第一个告警出现后等待 10 秒,等待10秒聚合告警
+  group_wait: 10s
+
+  # 两次分组发送间隔
+  group_interval: 10s
+
+  # 相同告警重复发送间隔
+  repeat_interval: 2m
+
+  # 默认接收器
+  receiver: 'web.hook'
+
+#通过 receivers 定义邮件、Webhook 等通知渠道
+receivers:
+
+  - name: 'web.hook'
+
+    # Webhook
+    # webhook_configs:
+    #   - url: 'http://127.0.0.1:5001/'
+
+    # 邮件
+    email_configs:
+      - to: 'a@gmail.com,b@gmail.com'
+
+#inhibit_rules 实现告警抑制，
+inhibit_rules:
+
+  # 如果存在 critical 告警，则抑制 warning
+  - source_match:
+      severity: 'critical'
+
+    target_match:
+      severity: 'warning'
+
+    equal:
+      - alertname
+      - dev
+      - instance

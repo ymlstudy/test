@@ -1,0 +1,65 @@
+groups:
+  - name: alertmanager_pod.rules
+    rules:
+    - alert: Pod_all_cpu_usage警告
+      expr: (sum by(name)(rate(container_cpu_usage_seconds_total{image!=""}[5m]))*100) > 0.1
+      for: 2m
+      labels:
+        severity: warning
+        service: pods
+        project: myserver
+      annotations:
+        description: 容器 {{ $labels.name }} CPU 资源利用率大于 10% , (current value is {{ $value }})
+        summary: Pod CPU利用率超过20%
+
+    - alert: Pod_all_cpu_usage严重
+      expr: (sum by(name)(rate(container_cpu_usage_seconds_total{image!=""}[5m]))*100) > 30
+      for: 2m
+      labels:
+        severity: critical
+        service: pods
+        project: myserver
+      annotations:
+        description: 容器 {{ $labels.name }} CPU 资源利用率大于 10% , (current value is {{ $value }})
+        summary: Pod CPU利用率超过30%
+
+
+    - alert: Pod_all_memory_usage  
+      #expr: sort_desc(avg by(name)(irate(container_memory_usage_bytes{name!=""}[5m]))*100) > 10  #内存大于10%
+      expr: sort_desc(avg by(name)(irate(node_memory_MemFree_bytes {name!=""}[5m]))) > 2   #内存大于2G
+      for: 2m
+      labels:
+        severity: critical
+        project: myserver
+      annotations:
+        description: 容器 {{ $labels.name }} Memory 资源利用率大于 2G , (current value is {{ $value }})
+        summary: Dev Memory 负载告警
+
+    - alert: Pod_all_network_receive_usage
+      expr: sum by (name)(irate(container_network_receive_bytes_total{container_label_io_kubernetes_pod_name!=""}[1m])) >  5 #50*1024*1024,前面为故意写错
+      for: 1m
+      labels:
+        severity: critical
+        project: myserver
+      annotations:
+        description: 容器 {{ $labels.name }} network_receive 资源利用率大于 50M , (current value is {{ $value }})
+
+    - alert: node内存可用大小 
+      expr: node_memory_MemFree_bytes < 4294967296 #故意写错的
+      for: 1m
+      labels:
+        #severity: critical #标签如果被基于严重等级的告警规则匹配成功后，则不在发送project规则的告警，即告警只会被一个规则匹配一次
+        project: node
+      annotations:
+        description: 容器可用内存小于4G
+
+  - name: ssl_expiry
+    rules:
+    - alert: Ssl Cert Will Expire in 30 days
+      expr: probe_ssl_earliest_cert_expiry - time() < 86400 * 30
+      for: 1m
+      labels:
+        severity: warning
+      annotations:
+        summary: "SSL certificate will expire soon on (instance {{ $labels.instance }})"
+        description: "https 证书还剩 30 days\n  VALUE = {{ $value }}\n  LABELS: {{ $labels }}"

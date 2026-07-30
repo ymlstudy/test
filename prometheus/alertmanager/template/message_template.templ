@@ -1,0 +1,293 @@
+{{ define "email.default.subject" }}
+[{{ .Status | toUpper }}][{{ .CommonLabels.severity }}] {{ .CommonLabels.alertname }}
+{{ end }}
+
+
+{{ define "email.default.html" }}
+
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<meta http-equiv="Content-Type"
+      content="text/html; charset=UTF-8">
+
+<style>
+
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 14px;
+    color: #333333;
+}
+
+table {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+th {
+    background: #F2F2F2;
+    text-align: left;
+    padding: 8px;
+    border: 1px solid #DDDDDD;
+}
+
+td {
+    padding: 8px;
+    border: 1px solid #DDDDDD;
+}
+
+.title-firing {
+    color: #d9534f;
+}
+
+.title-resolved {
+    color: #5cb85c;
+}
+
+.notice {
+    color: #ff6600;
+}
+
+</style>
+
+</head>
+
+<body>
+
+{{ if eq .Status "firing" }}
+
+<h2 class="title-firing">
+[告警通知] Prometheus Alert
+</h2>
+
+{{ else }}
+
+<h2 class="title-resolved">
+[恢复通知] Prometheus Alert
+</h2>
+
+{{ end }}
+
+<table>
+
+<tr>
+    <th width="20%">项目</th>
+    <th>内容</th>
+</tr>
+
+<tr>
+    <td>告警状态</td>
+    <td>{{ .Status | toUpper }}</td>
+</tr>
+
+<tr>
+    <td>告警名称</td>
+    <td>{{ .CommonLabels.alertname }}</td>
+</tr>
+
+<tr>
+    <td>严重级别</td>
+    <td>{{ .CommonLabels.severity }}</td>
+</tr>
+
+<tr>
+    <td>告警数量</td>
+    <td>{{ len .Alerts }}</td>
+</tr>
+
+<tr>
+    <td>通知时间</td>
+    <td>{{ now.Local.Format "2006-01-02 15:04:05" }}</td>
+</tr>
+
+{{ if .CommonLabels.env }}
+<tr>
+    <td>环境</td>
+    <td>{{ .CommonLabels.env }}</td>
+</tr>
+{{ end }}
+
+</table>
+
+<br>
+
+{{ if gt (len .Alerts) 20 }}
+
+<p class="notice">
+当前共有 {{ len .Alerts }} 个实例告警，请登录 Alertmanager 查看全部实例。
+</p>
+
+{{ end }}
+
+{{ range .Alerts }}
+
+<h3>告警详情</h3>
+
+<table>
+
+<tr>
+    <td width="20%">实例</td>
+    <td>{{ .Labels.instance }}</td>
+</tr>
+
+<tr>
+    <td>Job</td>
+    <td>{{ .Labels.job }}</td>
+</tr>
+
+{{ if .Labels.group }}
+<tr>
+    <td>业务组</td>
+    <td>{{ .Labels.group }}</td>
+</tr>
+{{ end }}
+
+{{ if .Labels.namespace }}
+<tr>
+    <td>Namespace</td>
+    <td>{{ .Labels.namespace }}</td>
+</tr>
+{{ end }}
+
+{{ if .Labels.node }}
+<tr>
+    <td>Node</td>
+    <td>{{ .Labels.node }}</td>
+</tr>
+{{ end }}
+
+{{ if .Labels.pod }}
+<tr>
+    <td>Pod</td>
+    <td>{{ .Labels.pod }}</td>
+</tr>
+{{ end }}
+
+{{ if .Labels.container }}
+<tr>
+    <td>Container</td>
+    <td>{{ .Labels.container }}</td>
+</tr>
+{{ end }}
+
+{{ if .Labels.url }}
+<tr>
+    <td>URL</td>
+    <td>{{ .Labels.url }}</td>
+</tr>
+{{ end }}
+
+{{ if .Labels.domain }}
+<tr>
+    <td>Domain</td>
+    <td>{{ .Labels.domain }}</td>
+</tr>
+{{ end }}
+
+<tr>
+    <td>Summary</td>
+    <td>{{ .Annotations.summary }}</td>
+</tr>
+
+<tr>
+    <td>Description</td>
+    <td>{{ .Annotations.description }}</td>
+</tr>
+
+<tr>
+    <td>开始时间</td>
+    <td>
+        {{ .StartsAt.Local.Format "2006-01-02 15:04:05" }}
+    </td>
+</tr>
+
+{{ if eq $.Status "resolved" }}
+
+<tr>
+    <td>恢复时间</td>
+    <td>
+        {{ .EndsAt.Local.Format "2006-01-02 15:04:05" }}
+    </td>
+</tr>
+
+<tr>
+    <td>持续时间</td>
+    <td>
+        {{ .EndsAt.Sub .StartsAt }}
+    </td>
+</tr>
+
+{{ else }}
+
+<tr>
+    <td>已持续</td>
+    <td>
+        告警处理中
+    </td>
+</tr>
+
+{{ end }}
+
+</table>
+
+<br>
+<hr>
+<br>
+
+{{ end }}
+
+<h3>相关链接</h3>
+
+<table>
+
+<tr>
+    <td width="20%">Alertmanager</td>
+    <td>
+        <a href="{{ .ExternalURL }}">
+            {{ .ExternalURL }}
+        </a>
+    </td>
+</tr>
+
+<tr>
+    <td>Grafana</td>
+    <td>
+        <a href="http://grafana.example.com">
+            http://grafana.example.com
+        </a>
+    </td>
+</tr>
+
+</table>
+
+<br>
+
+<h3>统计信息</h3>
+
+<table>
+
+<tr>
+    <td width="20%">状态</td>
+    <td>{{ .Status }}</td>
+</tr>
+
+<tr>
+    <td>告警总数</td>
+    <td>{{ len .Alerts }}</td>
+</tr>
+
+</table>
+
+<br>
+
+<p>
+This email was generated automatically by Prometheus Alertmanager.
+</p>
+
+</body>
+
+</html>
+
+{{ end }}

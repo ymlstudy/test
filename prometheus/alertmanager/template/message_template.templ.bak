@@ -1,0 +1,46 @@
+{{ define "email.default.html" }}
+
+<pre>
+
+{{ if eq .Status "firing" }}
+
+********告警通知********
+
+{{ range .Alerts }}
+
+告警名称：{{ .Labels.alertname }}
+
+告警级别：{{ .Labels.severity }}
+
+告警主题：{{ .Annotations.summary }}
+
+告警详情：{{ .Annotations.description }}
+
+故障时间：
+{{ .StartsAt.Local.Format "2006-01-02 15:04:05" }}
+
+实例：
+{{ .Labels.instance }}
+
+-----------------------------------
+
+{{ end }}
+
+{{ end }}
+
+{{ if eq .Status "resolved" }}
+
+********恢复通知********
+
+{{ range .Alerts }}
+
+恢复时间：
+{{ .EndsAt.Local.Format "2006-01-02 15:04:05" }}
+
+{{ end }}
+
+{{ end }}
+
+</pre>
+
+{{ end }}
