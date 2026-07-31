@@ -1,0 +1,44 @@
+groups:
+- name: etcd
+
+  rules:
+
+  - alert: EtcdDown
+    expr: up{job="etcd"} == 0
+    for: 1m
+    labels:
+      severity: critical
+    annotations:
+      summary: "etcd 不可用"
+      description: "{{ $labels.instance }} 无法访问"
+
+  - alert: EtcdLeaderLost
+    expr: etcd_server_has_leader == 0
+    for: 30s
+    labels:
+      severity: critical
+    annotations:
+      summary: "etcd Leader 丢失"
+      description: "{{ $labels.instance }} 当前没有 Leader"
+
+  - alert: EtcdHighFsyncLatency
+    expr: |
+      histogram_quantile(
+        0.99,
+        rate(etcd_disk_wal_fsync_duration_seconds_bucket[5m])
+      ) > 0.05
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: "etcd WAL fsync 延迟过高"
+      description: "{{ $labels.instance }} WAL fsync 超过 50ms"
+
+  - alert: EtcdDatabaseTooLarge
+    expr: etcd_mvcc_db_total_size_in_bytes > 8 * 1024 * 1024 * 1024
+    for: 10m
+    labels:
+      severity: warning
+    annotations:
+      summary: "etcd 数据库过大"
+      description: "{{ $labels.instance }} 数据库已超过 8GB"
