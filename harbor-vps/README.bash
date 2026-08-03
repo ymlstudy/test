@@ -121,6 +121,7 @@ kubectl apply -f harbor-vps/rewrite-image-all.yaml
 kubectl run test-pod --image=nginx:1.25 --restart=Never
 kubectl get pod test-pod -o jsonpath='{.spec.containers[0].image}'
 
+
 输出应该为：
 a.com/dockerhub/library/nginx:1.25
 
