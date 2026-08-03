@@ -6,7 +6,8 @@ spec:
   background: false
   validationFailureAction: Enforce
   rules:
-
+  
+  #k8sk8s.top 改为自己的域名
   # A) ghcr.io -> k8sk8s.top/ghcr/
   - name: rewrite-ghcr
     match:
