@@ -80,7 +80,7 @@ echo "--- 正在安装系统工具 ---"
 dnf install -y vim wget curl tar zip unzip net-tools iproute traceroute nmap telnet lsof tcpdump \
   procps-ng dstat sysstat git make gcc gcc-c++ perl nodejs vim-enhanced sudo epel-release systemd \
   firewalld chrony lrzsz tree bash-completion psmisc httpd-tools glibc glibc-devel pcre pcre-devel \
-  openssl openssl-devel zlib-devel libevent-devel bc systemd-devel
+  openssl openssl-devel zlib-devel libevent-devel bc systemd-devel bind-utils
 
 # --- 安装 Java 和 Maven ---
 echo "--- 正在安装 Java 和 Maven ---"
