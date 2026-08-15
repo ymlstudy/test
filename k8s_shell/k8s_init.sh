@@ -114,7 +114,7 @@ net.netfilter.nf_conntrack_max=2097152
 kernel.pid_max=4194303
 EOF
 
-内核模块开机挂载
+#内核模块开机挂载
 sudo bash -c 'cat > /etc/modules-load.d/modules.conf <<EOF
 ip_vs
 ip_vs_lc
