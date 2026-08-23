@@ -11,7 +11,7 @@ check_file_exist() {
 echo "--- 正在创建网络 Udev 规则 ---"
 if ! grep -q '00:23:12:21:d8:ae' /etc/udev/rules.d/10-network.rules; then
   cat << EOF > /etc/udev/rules.d/10-network.rules
-SUBSYSTEM=="net",ACTION=="add",ATTR{address}=="00:23:12:21:d8:ae",NAME="eth0"
+SUBSYSTEM=="net", ACTION=="add", ATTR{address}=="00:23:12:21:d8:ae", NAME="eth0"
 EOF
   echo "✅ 规则文件 /etc/udev/rules.d/10-network.rules 创建成功。"
 else
@@ -40,12 +40,15 @@ fi
 echo "--- 正在配置系统环境变量 ---"
 if ! grep -q 'export HISTTIMEFORMAT' /etc/profile; then
   tee -a /etc/profile > /dev/null <<EOF
+alias ssh='ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'
+alias scp='scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'
 export HISTTIMEFORMAT="%F %T \$(whoami) "
-export M2_HOME=/usr/local/maven/apache-maven-3.9.12
-export MAVEN_HOME=/usr/local/maven/apache-maven-3.9.12
+export M2_HOME=/usr/local/maven/apache-maven-3.9.16
+export MAVEN_HOME=/usr/local/maven/apache-maven-3.9.16
 export JAVA_HOME=/usr/local/java/jdk-17.0.12
 export PATH=\$PATH:\$JAVA_HOME/bin:\$MAVEN_HOME/bin
 EOF
+
   echo "✅ /etc/profile 已更新。"
 else
   echo "✅ /etc/profile 已包含相关环境变量，跳过。"
@@ -53,8 +56,8 @@ fi
 
 if ! grep -q 'PS1' /etc/profile.d/env.sh; then
   tee -a /etc/profile.d/env.sh > /dev/null <<EOF
-#PS1="\[\e[1;32m\][\[\e[0m\]\t \[\e[1;33m\]\u\[\e[36m\]@\h\[\e[1;31m\] \W\[\e[1;32m\]]\[\e[0m\]\$"
-PS1="\[\e[1;32m\][\[\e[1;33m\]\u\[\e[36m\]@\h\[\e[1;31m\] \W\[\e[1;32m\]]\[\e[0m\]\$"
+#PS1="\[\e[1;32m\][\[\e[0m\]\t \[\e[1;33m\]\u\[\e[36m\]@\h\[\e[1;31m\] \W\[\e[1;32m\]]\[\e[0m\]$"
+PS1="\[\e[1;32m\][\[\e[1;33m\]\u\[\e[36m\]@\h\[\e[1;31m\] \W\[\e[1;32m\]]\[\e[0m\]$"
 EOF
   echo "✅ /etc/profile.d/env.sh 已更新。"
 else
@@ -92,12 +95,12 @@ if [ ! -d "/usr/local/java/jdk-17.0.12" ]; then
   rm -f jdk-17.0.12_linux-x64_bin.tar.gz
 fi
 
-if [ ! -d "/usr/local/maven/apache-maven-3.9.12" ]; then
-  wget https://dlcdn.apache.org/maven/maven-3/3.9.12/binaries/apache-maven-3.9.12-bin.tar.gz
-  tar -xvf apache-maven-3.9.12-bin.tar.gz
+if [ ! -d "/usr/local/maven/apache-maven-3.9.16" ]; then
+  wget https://dlcdn.apache.org/maven/maven-3/3.9.16/binaries/apache-maven-3.9.16-bin.tar.gz
+  tar -xvf apache-maven-3.9.16-bin.tar.gz
   sudo mkdir -p /usr/local/maven
-  sudo mv apache-maven-3.9.12 /usr/local/maven/
-  rm -f apache-maven-3.9.12-bin.tar.gz /root/anaconda-ks.cfg  /root/original-ks.cfg
+  sudo mv apache-maven-3.9.16 /usr/local/maven/
+  rm -f apache-maven-3.9.16-bin.tar.gz /root/anaconda-ks.cfg  /root/original-ks.cfg
 fi
 echo "✅ Java 和 Maven 安装完成。"
 
@@ -113,26 +116,14 @@ fi
 
 # --- 获取并更新网络接口的 MAC 地址 ---
 echo "--- 正在更新 Udev 规则的 MAC 地址 ---"
-dev=""
-for d in ens160 eth0 enp0s3; do
-if [ -e "/sys/class/net/$d/address" ]; then
-    dev="$d"
-    break
-fi
-done
 
-mac_address=""
-if [ -n "$dev" ]; then
-  mac_address=$(cat "/sys/class/net/$dev/address")
-fi
+mac_address=$(ip link | awk '/link\/ether/ {print $2; exit}')
 
 if [ -n "$mac_address" ]; then
-  cat > /etc/udev/rules.d/10-network.rules <<EOF
-SUBSYSTEM=="net",ACTION=="add",ATTR{address}=="${mac_address}",NAME="eth0"
-EOF
-  echo "✅ MAC 地址已更新为 ${mac_address} (device=${dev})"
+    sed -i "s#ATTR{address}==\"[^\"]*\"#ATTR{address}==\"${mac_address}\"#" /etc/udev/rules.d/10-network.rules
+    echo "✅ MAC 地址已更新为 ${mac_address}"
 else
-  echo "❌ 未找到 MAC 地址，跳过更新。"
+    echo "❌ 未找到 MAC 地址，跳过更新。"
 fi
 
 # --- 用户输入新的 IP 地址 ---
