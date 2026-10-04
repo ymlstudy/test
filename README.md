@@ -1,4 +1,4 @@
-k8s_shell.zip
+k8s_shell.zip:
 K8S v1.28.15版本的初始化安装、删除、清理脚本
 
 
