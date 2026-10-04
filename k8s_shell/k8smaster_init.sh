@@ -30,7 +30,7 @@ if [ $? -eq 0 ]; then
 alias k=kubectl
 complete -F __start_kubectl k
 EOF
-    source ~/.bashrc
+
     echo "kubectl 配置完成。请在新开的终端中执行 'kubectl get nodes' 验证。"
 
     echo "--- 3. 重要提示：保存 Worker 节点加入命令 ---"
